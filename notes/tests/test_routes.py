@@ -1,13 +1,15 @@
 from http import HTTPStatus
-
 from django.contrib.auth.models import User
 from django.shortcuts import resolve_url, reverse
-from django.test import TestCase
-
+from django.test import TestCase, Client
 from notes.models import Note
 
-
 class NoteAppTestCase(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.client = Client()
+
     def setUp(self):
         self.user = User.objects.create_user(
             username='testuser', password='testpassword'
@@ -23,7 +25,9 @@ class NoteAppTestCase(TestCase):
         )
 
     def test_home_page_accessible(self):
-        # Проверка доступности домашней страницы
+        """
+        Проверка доступности домашней страницы.
+        """
         test_cases = [
             ('notes:home', 'notes/home.html'),
         ]
@@ -35,7 +39,9 @@ class NoteAppTestCase(TestCase):
                 self.assertTemplateUsed(response, template_name)
 
     def test_pages_accessibility(self):
-        # Проверка доступности страниц Аутентифицированному пользователю
+        """
+        Проверка доступности страниц Аутентифицированному пользователю.
+        """
         self.client.force_login(self.user)
         test_cases = [
             ('notes:list', 'notes/list.html'),
@@ -50,9 +56,12 @@ class NoteAppTestCase(TestCase):
                 self.assertTemplateUsed(response, template_name)
 
     def test_authorized_user_access(self):
-        # проверка доступа cтраницы отдельной заметки,
-        # удаления и редактирования заметки
-        # для авторизированного пользователя
+        """
+        Проверка доступа cтраницы.
+
+        Функция проверяет доступ к отдельной заметки, удаления и
+        редактирования заметки для авторизированного пользователя.
+        """
         test_cases = [
             ('detail', HTTPStatus.OK),
             ('edit', HTTPStatus.OK),
@@ -69,9 +78,12 @@ class NoteAppTestCase(TestCase):
                 self.assertEqual(response.status_code, allowed_status)
 
     def test_unauthorized_user_access(self):
-        # проверка доступа cтраницы отдельной заметки,
-        # удаления и редактирования заметки
-        # для не авторизированного пользователя
+        """
+        Проверка доступа cтраницы.
+
+        Функция проверяет доступ отдельной заметки, удаления и редактирования
+        заметки для не авторизированного пользователя.
+        """
         test_cases = [
             ('detail', HTTPStatus.NOT_FOUND),
             ('edit', HTTPStatus.NOT_FOUND),
@@ -88,6 +100,14 @@ class NoteAppTestCase(TestCase):
                 self.assertEqual(response.status_code, forbidden_status)
 
     def test_anonymous_user_redirect_to_login(self):
+        """
+        Проверка перенаправляется на страницу логина.
+
+        Функция проверяет что при попытке перейти на страницу списка заметок,
+        страницу успешного добавления записи, страницу добавления заметки,
+        отдельной заметки, редактирования или удаления заметки анонимный
+        пользователь перенаправляется на страницу логина.
+        """
         url_mappings = [
             ('notes:list', []),
             ('notes:success', []),
@@ -110,8 +130,12 @@ class NoteAppTestCase(TestCase):
                 self.assertRedirects(response, expected_redirect_url)
 
     def test_pages(self):
-        # проверка Страницы регистрации пользователей,
-        # входа в учётную запись и выхода из неё доступны всем пользователям
+        """
+        Проверка доступа страницы.
+
+        Функция проверяет доступ к регистрации пользователей, входа в учётную
+        запись и выхода из неё доступны всем пользователям.
+        """
         page_templates = [
             ('users:login', 'registration/login.html'),
             ('users:logout', 'registration/logout.html'),

@@ -9,8 +9,18 @@ from notes.models import Note
 
 
 class NotesTestCase(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """
+        Создаем клиенты для тестирования
+        """
+        super().setUpClass()
+        cls.client = Client()
+
     def setUp(self):
-        # Создаем пользователей и заметки для тестов
+        """
+        Создаем пользователей и заметки для тестов
+        """
         self.user1 = User.objects.create_user(
             username='user1',
             password='password1'
@@ -29,24 +39,29 @@ class NotesTestCase(TestCase):
             text='Текст заметки 2',
             author=self.user2
         )
-        self.client = Client()
         self.client.force_login(self.user1)
 
     def test_note_list_view(self):
-        # Тестирование просмотра списка заметок
+        """
+        Тестирование просмотра списка заметок
+        """
         url = reverse('notes:list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIn(self.note1, response.context['object_list'])
 
     def test_note_create_form(self):
-        # Тестирование формы создания заметки
+        """
+        Тестирование формы создания заметки
+        """
         response = self.client.get(reverse('notes:add'))
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIsInstance(response.context['form'], NoteForm)
 
     def test_note_update_form(self):
-        # Тестирование формы обновления заметки
+        """
+        Тестирование формы обновления заметки
+        """
         response = self.client.get(
             reverse('notes:edit', kwargs={'slug': self.note1.slug})
         )
@@ -55,7 +70,9 @@ class NotesTestCase(TestCase):
         self.assertEqual(response.context['form'].instance, self.note1)
 
     def test_notes_list_only_contains_user_notes(self):
-        # Тестирование списка заметок, содержащего только заметки пользователя
+        """
+        Тестирование списка заметок, содержащего только заметки пользователя
+        """
         url = reverse('notes:list')
         self.client.force_login(self.user2)
         response = self.client.get(url)
